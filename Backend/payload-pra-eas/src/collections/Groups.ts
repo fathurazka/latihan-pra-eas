@@ -8,10 +8,8 @@ const Groups: CollectionConfig = {
     useAsTitle: 'id',
   },
   access: {
-    create: authenticatedUser,
-    read: authenticatedUser,
-    update: authenticatedUser,
-    delete: authorOrAdmin,
+    create: () => true,
+    read: () => true,
   },
   fields: [
     {
@@ -19,46 +17,6 @@ const Groups: CollectionConfig = {
       type: 'text',
       required: true
     },
-    {
-      name: 'members',
-      type: 'array',
-      fields: [
-        {
-          name: 'memberID',
-          type: 'relationship',
-          relationTo: 'accounts',
-        }
-      ],
-      required: true
-    },
-    {
-      name: 'messages',
-      type: 'array',
-      fields: [
-        {
-          name: 'message',
-          type: 'group',
-          fields: [
-            {
-              name: 'sender',
-              type: 'relationship',
-              relationTo: 'accounts',
-              required: true
-            },
-            {
-              name: 'content',
-              type: 'textarea',
-              required: true
-            },
-            {
-              name: 'timestamp',
-              type: 'date',
-              required: true
-            }
-          ]
-        }
-      ],
-    }
   ]
 }
 

@@ -45,7 +45,8 @@
             <button>X</button>
         </div>
         <div class="form-container">
-            <input v-model="newGroupName" placeholder="Enter new group name">
+            <input v-model="newGroupName" placeholder="Enter the receiver's name">
+            <input v-model="receiverID" placeholder="Enter the receiver's ID">
             <button @click="createGroup">Create Group</button>
         </div>
     </div>
@@ -70,6 +71,9 @@ import { reactive } from 'vue';
 const openedGroup = ref('');
 const chats = ref([]);
 const message = ref(null);
+const sender = ref('');
+const memberOne = ref('');
+const memberTwo = ref('');
 
 export default {
 
@@ -80,7 +84,27 @@ export default {
         },
         async renderChats() {
             try {
-                const response = await fetch(`http://localhost:3000/api/chats?where[groupID][equals]=${openedGroup.value}`, {
+                const answer = await fetch(`http://localhost:3000/api/groups/${openedGroup.value}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    header: {
+                        "Content-type": 'application/json'
+                    }
+                });
+
+                const res = await answer.json();
+
+                //console.log(res);
+                const firstMember = res.memberOne;
+                const secondMember = res.memberTwo;
+                console.log(firstMember);
+                console.log(secondMember);
+                //console.log(res.docs);
+
+                if(store.userID === firstMember || store.userID === secondMember) {
+                    console.log('Access Granted');
+
+                    const response = await fetch(`http://localhost:3000/api/chats?where[groupID][equals]=${openedGroup.value}`, {
                     method: 'GET',
                     credentials: 'include',
                     header: {
@@ -100,6 +124,16 @@ export default {
 
 
                 this.chats = chatsWithUsernames;
+                }
+
+                else {
+                    openedGroup.value = null;
+                    window.alert('You do not have access to view this chat!');
+                    chats.value = null;
+                }
+
+
+
             } catch (error) {
                 console.log(error);
             }
@@ -137,8 +171,8 @@ export default {
                 });
 
                 const data = await response.json();
-                console.log('asdf');
-                console.log(data.username);
+                //console.log(data);
+                //console.log(data.username);
                 return data.username;
             } catch (error) {
                 console.log(error);
@@ -146,25 +180,7 @@ export default {
         }
     },
 
-    async created() {
-        try {
-            const response = await fetch('http://localhost:3000/api/groups/', {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
 
-            const data = await response.json();
-
-            store.groups = reactive(data.docs);
-
-            console.log(store.groups)
-        } catch (error) {
-            console.log(error);
-        }
-    },
     setup() {
         const router = useRouter();
 
@@ -199,6 +215,7 @@ export default {
                 })
                 const data = await response.json();
 
+                openedGroup.value = '';
                 router.push('/');
             } catch (error) {
                 console.log(error);
@@ -206,6 +223,7 @@ export default {
         }
 
         const newGroupName = ref('');
+        const receiverID = ref('');
 
         const createGroup = async () => {
             try {
@@ -216,21 +234,20 @@ export default {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        groupName: newGroupName.value,
-                        members: [{
-                            memberID: store.userID,
-                            memberName: store.username,
-                        }],
+                        groupName: store.username + " and " + newGroupName.value,
+                        memberOne: store.userID,
+                        memberTwo: receiverID.value
                     }),
                 });
 
                 const data = await response.json();
 
-                console.log(data);
+                //console.log(data);
 
                 store.groups.push(data.doc);
 
                 newGroupName.value = '';
+                receiverID.value = '';
 
                 showCreateGroupForm.value = false;
             } catch (error) {
@@ -257,13 +274,13 @@ export default {
 
                 const data = await response.json();
 
-                console.log(data);
+                //console.log(data);
 
                 if(data.message === 'Updated successfully.') {
                     if(data.group) {
                         store.groups.push(data.group);
                     } else {
-                        console.log('data.group is undefined');
+                        //console.log('data.group is undefined');
                     }
                 } else {
                     alert('Failed to join group');
@@ -283,6 +300,7 @@ export default {
             showCreateGroupForm,
             hideCreateGroup,
             newGroupName,
+            receiverID,
             createGroup,
             showJoinGroup,
             showJoinGroupForm,

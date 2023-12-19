@@ -17,6 +17,16 @@ const Groups: CollectionConfig = {
       type: 'text',
       required: true
     },
+    {
+      name: 'memberOne',
+      type: 'text',
+      required: true
+    },
+    {
+      name: 'memberTwo',
+      type: 'text',
+      required: true 
+    }
   ]
 }
 
